@@ -1,23 +1,22 @@
 import app from "./src/app.js";
 import dotenv from "dotenv";
+import express from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
 
 dotenv.config();
 
 const PORT = 5000;
 
-app.use(cookieParser());
-
 app.use(express.json());
+app.use(cookieParser());
 
 app.use(
   cors({
-    origin: "http://localhost:8081/", // Cambia esto según tu frontend
-    credentials: true, // Permite el envío de cookies de autenticación
+    origin: "http://localhost:8081",
+    credentials: true,
   })
 );
-
-app.use(express.urlencoded({ extended: true }));
-app.use("/api", routes);
 
 app.listen(PORT, () => {
   console.log("RabbitMQ Config:");
