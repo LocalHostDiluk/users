@@ -16,9 +16,6 @@ app.use(
   })
 );
 
-app.use(express.urlencoded({ extended: true }));
-app.use("/api", routes);
-
 app.listen(PORT, () => {
   console.log("RabbitMQ Config:");
   console.log("Host:", process.env.RABBITMQ_HOST);
