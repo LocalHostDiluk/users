@@ -67,6 +67,7 @@ export const createUser = async (req, res) => {
       password,
       status: true,
       creationDate: new Date(),
+      rol: "user", // <-- aquí se agrega el valor por defecto
     });
 
     console.log(newUser);
@@ -148,12 +149,12 @@ export const deleteUser = async (req, res) => {
 };
 
 export const login = async (req, res) => {
-  
   const { username, password } = req.body;
 
   try {
     const SECRET_KEY = "aJksd9QzPl+sVdK7vYc/L4dK8HgQmPpQ5K9yApUsj3w=";
     const user = await User.findOne({ where: { username, password } });
+
     if (!user) {
       return res
         .status(400)
@@ -166,7 +167,13 @@ export const login = async (req, res) => {
       { expiresIn: "1h" }
     );
 
-    return res.status(200).json({message: "Login correcto", data: token});
+    return res.status(200).json({
+      message: "Login correcto",
+      data: {
+        token,
+        rol: user.rol, // <-- añadimos el rol aquí
+      },
+    });
   } catch (error) {
     console.error("Error al buscar usuario:", error);
     return res.status(500).json({ message: "Error al buscar usuario" });
