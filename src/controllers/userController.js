@@ -1,5 +1,5 @@
 import User from "../models/userModel.js";
-import { userCreatedEvent, userRecoverEvent } from "../services/service.js";
+import { userCreatedEvent, passwordRecoveryEvent } from "../services/service.js";
 import jwt from "jsonwebtoken";
 
 export const getUsers = async (req, res) => {
