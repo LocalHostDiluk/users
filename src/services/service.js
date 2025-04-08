@@ -43,3 +43,33 @@ export async function userCreatedEvent(user) {
     setTimeout(userEvents, 5000);
   }
 }
+
+export async function userRecoverEvent(data) {
+    try {
+        if (!RABBITMQ_URL) {
+            throw new Error("❌ No se encontró la variable RABBITMQ_URL en el entorno.");
+        }
+
+        console.log("🔌 Conectando a RabbitMQ...");
+        const connection = await amqp.connect(RABBITMQ_URL);
+        const channel = await connection.createChannel();
+
+        await channel.assertExchange(RABBITMQ_EXCHANGE, "topic", { durable: true });
+
+        await channel.assertQueue(QUEUE_RECOVER, { durable: true });
+        await channel.bindQueue(QUEUE_RECOVER, RABBITMQ_EXCHANGE, ROUTING_KEY_RECOVER);
+
+        const message = JSON.stringify(data);
+        channel.publish(RABBITMQ_EXCHANGE, ROUTING_KEY_RECOVER, Buffer.from(message));
+
+        console.log(`✅ Evento de recuperación enviado: ${message}`);
+
+        setTimeout(() => {
+            connection.close();
+            console.log("🔌 Conexión cerrada.");
+        }, 500);
+        
+    } catch (error) {
+        console.error("❌ Error publicando el evento de recuperación:", error.message);
+    }
+}
