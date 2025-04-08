@@ -27,13 +27,18 @@ const User = sequelize.define("User", {
     defaultValue: true,
   },
   creationDate: {
-    type    : DataTypes.DATE,
+    type: DataTypes.DATE,
     allowNull: false,
     defaultValue: DataTypes.NOW,
   },
+  rol: {
+    type: DataTypes.ENUM("user", "editor"),
+    allowNull: false,
+    defaultValue: "user",
+  },
 }, {
-    timestamps: false, // Desactiva createdAt y updatedAt
-    tableName: "users", //Debe coincidir con el nombre de la tabla
+  timestamps: false,
+  tableName: "users",
 });
 
 export default User;
