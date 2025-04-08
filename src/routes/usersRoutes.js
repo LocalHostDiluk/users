@@ -5,8 +5,7 @@ import {
   updateUser,
   deleteUser,
   login,
-  recoverPassword, 
-  resetPassword,
+  recoverPassword
 } from "../controllers/userController.js";
 
 const router = express.Router(); // Router para crear rutas de nuestro servicio
