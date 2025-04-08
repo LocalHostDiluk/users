@@ -58,4 +58,8 @@ router.delete("/delete/:id", deleteUser);
 
 router.post("/login", login);
 
+router.post("/recover-password", recoverPassword);
+
+router.post("/reset-password", resetPassword);
+
 export default router;
