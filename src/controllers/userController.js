@@ -181,59 +181,24 @@ export const login = async (req, res) => {
 };
 
 export const recoverPassword = async (req, res) => {
-  const { username } = req.body;
+  const { email } = req.body;
 
-  if (!username) {
-    return res.status(400).json({ message: "El correo electrónico es obligatorio" });
+  if (!email) {
+    return res.status(400).json({ message: "El correo es obligatorio" });
   }
 
   try {
-    const user = await User.findOne({ where: { username } });
-
+    const user = await User.findOne({ where: { username: email } });
     if (!user) {
       return res.status(404).json({ message: "Usuario no encontrado" });
     }
 
-    const SECRET_KEY = process.env.JWT_SECRET;
-    const resetToken = jwt.sign({ id: user.id, username: user.username }, SECRET_KEY, { expiresIn: "100h" });
-
-    // Publicar evento en RabbitMQ
-    await userRecoverEvent({ username: user.username, resetToken });
+    await passwordRecoveryEvent({ email });
 
     return res.status(200).json({ message: "Correo de recuperación enviado" });
+
   } catch (error) {
-    console.error("Error en la recuperación de contraseña:", error);
-    return res.status(500).json({ message: "Error en el servidor" });
-  }
-};
-
-export const resetPassword = async (req, res) => {
-  const { token, newPassword } = req.body;
-console.log(token)
-console.log(newPassword)
-
-  if (!token || !newPassword) {
-    return res.status(400).json({ message: "Token y nueva contraseña son obligatorios" });
-  }
-
-  try {
-    const SECRET_KEY = process.env.JWT_SECRET;
-    console.log(SECRET_KEY)
-
-    const decoded = jwt.verify(token, SECRET_KEY);
-
-    const user = await User.findOne({ where: { id: decoded.id } });
-
-    if (!user) {
-      return res.status(404).json({ message: "Usuario no encontrado" });
-    }
-
-  //  const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await user.update({ password: newPassword });
-
-    return res.status(200).json({ message: "Contraseña actualizada correctamente" });
-  } catch (error) {
-    console.log(error)
-    return res.status(400).json({ message: "Token inválido o expirado" });
+    console.error("Error al enviar recuperación:", error);
+    res.status(500).json({ message: "Error al enviar recuperación" });
   }
 };
