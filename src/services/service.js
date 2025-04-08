@@ -44,32 +44,35 @@ export async function userCreatedEvent(user) {
   }
 }
 
-export async function userRecoverEvent(data) {
-    try {
-        if (!RABBITMQ_URL) {
-            throw new Error("❌ No se encontró la variable RABBITMQ_URL en el entorno.");
-        }
+export async function passwordRecoveryEvent(data) {
+  try {
+    const connection = await amqp.connect({
+      protocol: 'amqps',
+      hostname: process.env.RABBITMQ_URL,
+      port: 5671,
+      username: process.env.RABBITMQ_USER,
+      password: process.env.RABBIT_PASS,
+      vhost: process.env.RABBITMQ_VHOST
+    });
 
-        console.log("🔌 Conectando a RabbitMQ...");
-        const connection = await amqp.connect(RABBITMQ_URL);
-        const channel = await connection.createChannel();
+    const channel = await connection.createChannel();
 
-        await channel.assertExchange(RABBITMQ_EXCHANGE, "topic", { durable: true });
+    const exchange = "user_event";
+    const routingKey = "user.recover";
 
-        await channel.assertQueue(QUEUE_RECOVER, { durable: true });
-        await channel.bindQueue(QUEUE_RECOVER, RABBITMQ_EXCHANGE, ROUTING_KEY_RECOVER);
+    await channel.assertExchange(exchange, "topic", { durable: true });
 
-        const message = JSON.stringify(data);
-        channel.publish(RABBITMQ_EXCHANGE, ROUTING_KEY_RECOVER, Buffer.from(message));
+    const message = JSON.stringify({
+      email: data.email,
+      subject: "Recuperación de contraseña",
+      body: `Hola, has solicitado recuperar tu contraseña. Si no fuiste tú, ignora este mensaje.`
+    });
 
-        console.log(`✅ Evento de recuperación enviado: ${message}`);
+    channel.publish(exchange, routingKey, Buffer.from(message));
+    console.log(`[x] Sent recovery to ${data.email}`);
 
-        setTimeout(() => {
-            connection.close();
-            console.log("🔌 Conexión cerrada.");
-        }, 500);
-        
-    } catch (error) {
-        console.error("❌ Error publicando el evento de recuperación:", error.message);
-    }
+    setTimeout(() => connection.close(), 500);
+  } catch (error) {
+    console.error("Error al publicar evento de recuperación:", error);
+  }
 }
