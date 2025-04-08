@@ -1,5 +1,5 @@
 import User from "../models/userModel.js";
-import { userCreatedEvent } from "../services/service.js";
+import { userCreatedEvent, userRecoverEvent } from "../services/service.js";
 import jwt from "jsonwebtoken";
 
 export const getUsers = async (req, res) => {
@@ -177,5 +177,63 @@ export const login = async (req, res) => {
   } catch (error) {
     console.error("Error al buscar usuario:", error);
     return res.status(500).json({ message: "Error al buscar usuario" });
+  }
+};
+
+export const recoverPassword = async (req, res) => {
+  const { username } = req.body;
+
+  if (!username) {
+    return res.status(400).json({ message: "El correo electrónico es obligatorio" });
+  }
+
+  try {
+    const user = await User.findOne({ where: { username } });
+
+    if (!user) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+
+    const SECRET_KEY = process.env.JWT_SECRET;
+    const resetToken = jwt.sign({ id: user.id, username: user.username }, SECRET_KEY, { expiresIn: "100h" });
+
+    // Publicar evento en RabbitMQ
+    await userRecoverEvent({ username: user.username, resetToken });
+
+    return res.status(200).json({ message: "Correo de recuperación enviado" });
+  } catch (error) {
+    console.error("Error en la recuperación de contraseña:", error);
+    return res.status(500).json({ message: "Error en el servidor" });
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  const { token, newPassword } = req.body;
+console.log(token)
+console.log(newPassword)
+
+  if (!token || !newPassword) {
+    return res.status(400).json({ message: "Token y nueva contraseña son obligatorios" });
+  }
+
+  try {
+    const SECRET_KEY = process.env.JWT_SECRET;
+    console.log(SECRET_KEY)
+
+    const decoded = jwt.verify(token, SECRET_KEY);
+
+    const user = await User.findOne({ where: { id: decoded.id } });
+
+    if (!user) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+
+  //  const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await user.update({ password: newPassword });
+
+    return res.status(200).json({ message: "Contraseña actualizada correctamente" });
+  } catch (error) {
+    console.log(error)
+    return res.status(400).json({ message: "Token inválido o expirado" });
   }
 };
