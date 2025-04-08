@@ -48,7 +48,7 @@ export async function passwordRecoveryEvent(data) {
   try {
     const connection = await amqp.connect({
       protocol: 'amqps',
-      hostname: process.env.RABBITMQ_URL,
+      hostname: process.env.RABBITMQ_HOST,
       port: 5671,
       username: process.env.RABBITMQ_USER,
       password: process.env.RABBIT_PASS,
