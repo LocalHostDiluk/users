@@ -173,6 +173,7 @@ export const login = async (req, res) => {
         token,
         rol: user.rol,
         userId: user.id, // <-- Se añade el id del usuario
+        phone: user.phone
       },
     });
   } catch (error) {
