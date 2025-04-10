@@ -171,7 +171,8 @@ export const login = async (req, res) => {
       message: "Login correcto",
       data: {
         token,
-        rol: user.rol, // <-- añadimos el rol aquí
+        rol: user.rol,
+        userId: user.id, // <-- Se añade el id del usuario
       },
     });
   } catch (error) {
